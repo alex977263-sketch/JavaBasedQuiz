@@ -1,0 +1,6 @@
+{
+  "name": "JavaQuiz Pro - Online Quiz & Assessment Platform",
+  "description": "Comprehensive Java-based online quiz and assessment platform for students and educators with real-time test engine, analytics, and Spring Boot architecture.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
