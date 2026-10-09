@@ -6,22 +6,20 @@
 import React, { useState } from 'react';
 import { QuizProvider, useQuiz } from './context/QuizContext';
 import { Navbar, ActiveTab } from './components/Navbar';
-import { StudentDashboard } from './components/StudentDashboard';
+import { ParticipantDashboard } from './components/ParticipantDashboard';
+import { QuizCreatorDashboard } from './components/QuizCreatorDashboard';
+import { AdminDashboard } from './components/AdminDashboard';
 import { QuizCatalog } from './components/QuizCatalog';
 import { QuizEngine } from './components/QuizEngine';
 import { QuizResultView } from './components/QuizResultView';
 import { AttemptsHistory } from './components/AttemptsHistory';
-import { AdminPanel } from './components/AdminPanel';
 import { AuthModal } from './components/AuthModal';
-import { QuizAttempt, Quiz } from './types/quiz';
+import { QuizAttempt } from './types/quiz';
 import {
   Coffee,
   Database,
-  ShieldCheck,
   Server,
-  Code2,
   RotateCcw,
-  BookOpen,
 } from 'lucide-react';
 
 const MainApp: React.FC = () => {
@@ -58,7 +56,13 @@ const MainApp: React.FC = () => {
   const handleBackToDashboard = () => {
     setSelectedReviewAttempt(null);
     setLastAttemptResult(null);
-    setActiveTab('dashboard');
+    if (currentUser?.role === 'ROLE_ADMIN') {
+      setActiveTab('admin-dashboard');
+    } else if (currentUser?.role === 'ROLE_CREATOR') {
+      setActiveTab('creator-dashboard');
+    } else {
+      setActiveTab('participant-dashboard');
+    }
   };
 
   const handleBrowseQuizzes = () => {
@@ -98,18 +102,30 @@ const MainApp: React.FC = () => {
             {activeTab === 'catalog' && (
               <QuizCatalog
                 onStartQuiz={handleStartQuiz}
-                onEditQuiz={(quiz) => {
-                  setActiveTab('admin');
+                onEditQuiz={() => {
+                  if (currentUser?.role === 'ROLE_CREATOR') {
+                    setActiveTab('creator-dashboard');
+                  } else {
+                    setActiveTab('admin-dashboard');
+                  }
                 }}
               />
             )}
 
-            {activeTab === 'dashboard' && (
-              <StudentDashboard
+            {activeTab === 'participant-dashboard' && (
+              <ParticipantDashboard
                 onStartQuiz={handleStartQuiz}
                 onViewReview={handleViewReview}
                 onBrowseQuizzes={handleBrowseQuizzes}
               />
+            )}
+
+            {activeTab === 'creator-dashboard' && (
+              <QuizCreatorDashboard />
+            )}
+
+            {activeTab === 'admin-dashboard' && (
+              <AdminDashboard />
             )}
 
             {activeTab === 'history' && (
@@ -119,8 +135,6 @@ const MainApp: React.FC = () => {
                 onBrowseQuizzes={handleBrowseQuizzes}
               />
             )}
-
-            {activeTab === 'admin' && <AdminPanel />}
           </>
         )}
       </main>
@@ -142,12 +156,12 @@ const MainApp: React.FC = () => {
               <div>
                 <span className="font-bold text-slate-200 text-sm">JavaQuiz Pro</span>
                 <p className="text-[11px] text-slate-500">
-                  Full-Stack Java Examination & Assessment Platform
+                  Java-Based Online Quiz Platform (Spring Boot & MySQL Architecture)
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
               <button
                 onClick={() => setActiveTab('catalog')}
                 className="hover:text-white transition-colors"
@@ -156,10 +170,24 @@ const MainApp: React.FC = () => {
               </button>
               <span aria-hidden="true">·</span>
               <button
-                onClick={() => setActiveTab('dashboard')}
+                onClick={() => setActiveTab('participant-dashboard')}
                 className="hover:text-white transition-colors"
               >
-                Dashboard
+                Participant Portal
+              </button>
+              <span aria-hidden="true">·</span>
+              <button
+                onClick={() => setActiveTab('creator-dashboard')}
+                className="hover:text-white transition-colors"
+              >
+                Creator Console
+              </button>
+              <span aria-hidden="true">·</span>
+              <button
+                onClick={() => setActiveTab('admin-dashboard')}
+                className="hover:text-white transition-colors"
+              >
+                Admin Governance
               </button>
               <span aria-hidden="true">·</span>
               <button
@@ -174,13 +202,13 @@ const MainApp: React.FC = () => {
           </div>
 
           <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400">
-            <p>© {new Date().getFullYear()} JavaQuiz Pro Platform. Designed for Java Developers & Computer Science Students.</p>
+            <p>© {new Date().getFullYear()} Java-Based Online Quiz Platform. Powered by Spring Boot & MySQL.</p>
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
                 <Server className="w-3.5 h-3.5 text-blue-400" /> Java 17 + Spring Boot 3.2
               </span>
               <span className="flex items-center gap-1">
-                <Database className="w-3.5 h-3.5 text-emerald-400" /> MySQL 8.0 & JPA
+                <Database className="w-3.5 h-3.5 text-emerald-400" /> MySQL 8.0 & Spring Data JPA
               </span>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import {
   User,
+  Role,
   Quiz,
   Category,
   QuizAttempt,
@@ -8,6 +9,13 @@ import {
   StudentStats,
   Question,
   Difficulty,
+  ApprovalStatus,
+  SystemSettings,
+  SystemAlert,
+  ParticipantCreatorInteraction,
+  QuizReminder,
+  LeaderboardEntry,
+  CreatorReviewFeedback,
 } from '../types/quiz';
 import { INITIAL_CATEGORIES, INITIAL_QUIZZES } from '../data/sampleQuizzes';
 
@@ -19,7 +27,143 @@ export const DEMO_ADMIN: User = {
   role: 'ROLE_ADMIN',
   createdAt: '2026-01-01T08:00:00Z',
   collegeOrCompany: 'Faculty of Software Systems',
+  isEnabled: true,
 };
+
+export const DEMO_CREATOR: User = {
+  id: 2,
+  username: 'creator',
+  email: 'creator@javaquiz.com',
+  fullName: 'Prof. James Gosling',
+  role: 'ROLE_CREATOR',
+  createdAt: '2026-01-10T09:30:00Z',
+  collegeOrCompany: 'Java Curriculum Lead',
+  isEnabled: true,
+};
+
+export const DEMO_PARTICIPANT: User = {
+  id: 3,
+  username: 'participant',
+  email: 'participant@javaquiz.com',
+  fullName: 'Rahul Sharma',
+  role: 'ROLE_PARTICIPANT',
+  createdAt: '2026-02-01T11:00:00Z',
+  collegeOrCompany: 'Computer Science & Engineering',
+  isEnabled: true,
+};
+
+export const INITIAL_USERS: User[] = [
+  DEMO_ADMIN,
+  DEMO_CREATOR,
+  DEMO_PARTICIPANT,
+  {
+    id: 4,
+    username: 'anita_creator',
+    email: 'anita@javaquiz.com',
+    fullName: 'Dr. Anita Borg',
+    role: 'ROLE_CREATOR',
+    createdAt: '2026-01-15T14:20:00Z',
+    collegeOrCompany: 'Systems & OS Department',
+    isEnabled: true,
+  },
+  {
+    id: 5,
+    username: 'priya_student',
+    email: 'priya@javaquiz.com',
+    fullName: 'Priya Patel',
+    role: 'ROLE_PARTICIPANT',
+    createdAt: '2026-02-10T16:00:00Z',
+    collegeOrCompany: 'Software Technology Institute',
+    isEnabled: true,
+  },
+  {
+    id: 6,
+    username: 'david_student',
+    email: 'david@javaquiz.com',
+    fullName: 'David Kim',
+    role: 'ROLE_PARTICIPANT',
+    createdAt: '2026-02-14T10:15:00Z',
+    collegeOrCompany: 'Applied Computing College',
+    isEnabled: true,
+  },
+];
+
+export const INITIAL_SYSTEM_SETTINGS: SystemSettings = {
+  platformTitle: 'Java-Based Online Quiz Platform',
+  defaultDurationMinutes: 15,
+  defaultPassingPercentage: 70,
+  autoApproveQuizzes: false,
+  allowParticipantInteractions: true,
+  registrationOpen: true,
+  maintenanceMode: false,
+  systemAnnouncement: 'Welcome to JavaQuiz Platform! Timed quizzes and performance reports are active.',
+};
+
+export const INITIAL_SYSTEM_ALERTS: SystemAlert[] = [
+  {
+    id: 1,
+    title: 'New Quiz Submission Pending Approval',
+    message: 'Quiz "Operating Systems: Threads, Scheduling & Paging" by Prof. James Gosling requires review.',
+    type: 'INFO',
+    timestamp: '2026-03-08T09:00:00Z',
+    isRead: false,
+  },
+  {
+    id: 2,
+    title: 'Scheduled Maintenance Notice',
+    message: 'Weekly database backup and index optimization will occur this Sunday from 02:00 to 02:30 AM UTC.',
+    type: 'WARNING',
+    timestamp: '2026-03-07T14:30:00Z',
+    isRead: false,
+  },
+];
+
+export const INITIAL_INTERACTIONS: ParticipantCreatorInteraction[] = [
+  {
+    id: 1,
+    participantId: 3,
+    participantName: 'Rahul Sharma',
+    participantEmail: 'participant@javaquiz.com',
+    creatorId: 2,
+    creatorName: 'Prof. James Gosling',
+    quizId: 1,
+    quizTitle: 'Java Core: Variables, Data Types & Control Flow',
+    subject: 'Question 2 Operator Precedence Clarification',
+    message: 'Could you explain why ++a evaluated to 7 after post-incrementing earlier in the expression?',
+    reply: 'Great question Rahul! The expression evaluates left-to-right. First a++ uses the initial 5 (then a becomes 6). Then ++a immediately increments 6 to 7 before evaluating, resulting in 5 + 7 = 12.',
+    repliedAt: '2026-03-05T15:20:00Z',
+    repliedByName: 'Prof. James Gosling',
+    status: 'RESOLVED',
+    createdAt: '2026-03-05T12:00:00Z',
+  },
+  {
+    id: 2,
+    participantId: 3,
+    participantName: 'Rahul Sharma',
+    participantEmail: 'participant@javaquiz.com',
+    creatorId: 2,
+    creatorName: 'Prof. James Gosling',
+    quizId: 3,
+    quizTitle: 'Java Collections Framework & Generics',
+    subject: 'PECS Rule with generic wildcards in Collections',
+    message: 'Can you recommend additional practice problems for <? super T> vs <? extends T> producer-consumer patterns?',
+    status: 'OPEN',
+    createdAt: '2026-03-08T08:15:00Z',
+  },
+];
+
+export const INITIAL_REMINDERS: QuizReminder[] = [
+  {
+    id: 1,
+    participantId: 3,
+    quizId: 2,
+    quizTitle: 'Object-Oriented Programming (OOP) in Java',
+    reminderDateTime: '2026-03-12T18:00',
+    note: 'Review constructor chaining and method overriding before attempting',
+    isCompleted: false,
+    createdAt: '2026-03-07T10:00:00Z',
+  },
+];
 
 interface ActiveExamState {
   quiz: Quiz;
@@ -35,15 +179,29 @@ interface ActiveExamState {
 interface QuizContextType {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
+  users: User[];
+  loginAsRole: (role: Role) => void;
   loginAsDemoAdmin: () => void;
+  loginAsDemoCreator: () => void;
+  loginAsDemoParticipant: () => void;
   logout: () => void;
-  registerUser: (fullName: string, email: string) => void;
+  registerUser: (fullName: string, email: string, role: Role) => void;
 
+  // Admin user management
+  createUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
+  updateUser: (id: number, data: Partial<User>) => void;
+  deleteUser: (id: number) => void;
+  toggleUserStatus: (id: number) => void;
+
+  // Quizzes & Approvals
   categories: Category[];
   quizzes: Quiz[];
   activeExam: ActiveExamState | null;
   lastAttemptResult: QuizAttempt | null;
   attemptsHistory: QuizAttempt[];
+
+  approveQuiz: (quizId: number) => void;
+  rejectQuiz: (quizId: number, reason: string) => void;
 
   // Exam actions
   startQuiz: (quizId: number, shuffle?: boolean) => void;
@@ -56,25 +214,50 @@ interface QuizContextType {
   cancelExam: () => void;
   setLastAttemptResult: (result: QuizAttempt | null) => void;
 
-  // Admin actions
+  // Quiz Creator actions
   createQuiz: (quizData: Partial<Quiz>) => Quiz;
   updateQuiz: (id: number, quizData: Partial<Quiz>) => void;
   deleteQuiz: (id: number) => void;
   toggleQuizStatus: (id: number) => void;
   addQuestionToQuiz: (quizId: number, question: Omit<Question, 'id' | 'quizId' | 'questionNumber'>) => void;
   deleteQuestion: (quizId: number, questionId: number) => void;
-  resetDemoData: () => void;
+  gradeAttempt: (attemptId: number, feedbackNotes: string, gradeTag: 'EXCELLENT' | 'GOOD' | 'NEEDS_WORK') => void;
 
-  // Computed student stats
+  // Interactions (Creator <-> Participant)
+  interactions: ParticipantCreatorInteraction[];
+  sendInteraction: (quizId: number, subject: string, message: string) => void;
+  replyToInteraction: (interactionId: number, replyText: string) => void;
+
+  // Reminders
+  reminders: QuizReminder[];
+  addQuizReminder: (quizId: number, reminderDateTime: string, note?: string) => void;
+  deleteQuizReminder: (reminderId: number) => void;
+  toggleQuizReminderCompleted: (reminderId: number) => void;
+
+  // System Settings & Alerts
+  systemSettings: SystemSettings;
+  updateSystemSettings: (newSettings: Partial<SystemSettings>) => void;
+  systemAlerts: SystemAlert[];
+  addSystemAlert: (title: string, message: string, type: 'INFO' | 'WARNING' | 'CRITICAL') => void;
+  dismissSystemAlert: (id: number) => void;
+
+  // Leaderboard & Analytics
+  leaderboard: LeaderboardEntry[];
   studentStats: StudentStats;
+  resetDemoData: () => void;
 }
 
 const QuizContext = createContext<QuizContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  USER: 'javaquiz_user_v3',
-  QUIZZES: 'javaquiz_quizzes_v3',
-  ATTEMPTS: 'javaquiz_attempts_v3',
+  USER: 'javaquiz_guvi_user_v4',
+  USERS: 'javaquiz_guvi_users_v4',
+  QUIZZES: 'javaquiz_guvi_quizzes_v4',
+  ATTEMPTS: 'javaquiz_guvi_attempts_v4',
+  SETTINGS: 'javaquiz_guvi_settings_v4',
+  ALERTS: 'javaquiz_guvi_alerts_v4',
+  INTERACTIONS: 'javaquiz_guvi_interactions_v4',
+  REMINDERS: 'javaquiz_guvi_reminders_v4',
 };
 
 export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -82,24 +265,23 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.USER);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (
-          parsed.fullName === 'Alex Vance' ||
-          parsed.fullName?.includes('Sarah Chen') ||
-          parsed.username === 'alex_student'
-        ) {
-          return DEMO_ADMIN;
-        }
-        return parsed;
-      }
-      return DEMO_ADMIN;
+      return saved ? JSON.parse(saved) : DEMO_ADMIN;
     } catch {
       return DEMO_ADMIN;
     }
   });
 
-  // Quizzes list state
+  // User accounts list
+  const [users, setUsers] = useState<User[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.USERS);
+      return saved ? JSON.parse(saved) : INITIAL_USERS;
+    } catch {
+      return INITIAL_USERS;
+    }
+  });
+
+  // Quizzes state
   const [quizzes, setQuizzes] = useState<Quiz[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.QUIZZES);
@@ -109,10 +291,10 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
-  // Categories list
+  // Categories
   const [categories] = useState<Category[]>(INITIAL_CATEGORIES);
 
-  // Attempts history state
+  // Attempts history
   const [attemptsHistory, setAttemptsHistory] = useState<QuizAttempt[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.ATTEMPTS);
@@ -122,18 +304,58 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
-  // Active quiz exam state
+  // System Settings
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      return saved ? JSON.parse(saved) : INITIAL_SYSTEM_SETTINGS;
+    } catch {
+      return INITIAL_SYSTEM_SETTINGS;
+    }
+  });
+
+  // System Alerts
+  const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.ALERTS);
+      return saved ? JSON.parse(saved) : INITIAL_SYSTEM_ALERTS;
+    } catch {
+      return INITIAL_SYSTEM_ALERTS;
+    }
+  });
+
+  // Interactions between Participant and Creator
+  const [interactions, setInteractions] = useState<ParticipantCreatorInteraction[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.INTERACTIONS);
+      return saved ? JSON.parse(saved) : INITIAL_INTERACTIONS;
+    } catch {
+      return INITIAL_INTERACTIONS;
+    }
+  });
+
+  // Participant Reminders
+  const [reminders, setReminders] = useState<QuizReminder[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.REMINDERS);
+      return saved ? JSON.parse(saved) : INITIAL_REMINDERS;
+    } catch {
+      return INITIAL_REMINDERS;
+    }
+  });
+
+  // Active exam state
   const [activeExam, setActiveExam] = useState<ActiveExamState | null>(null);
   const [lastAttemptResult, setLastAttemptResult] = useState<QuizAttempt | null>(null);
 
-  // Sync to localStorage
+  // Sync state to LocalStorage
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.USER);
-    }
+    if (currentUser) localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
   }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  }, [users]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.QUIZZES, JSON.stringify(quizzes));
@@ -143,7 +365,23 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(STORAGE_KEYS.ATTEMPTS, JSON.stringify(attemptsHistory));
   }, [attemptsHistory]);
 
-  // Timer loop for active exam
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(systemSettings));
+  }, [systemSettings]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.ALERTS, JSON.stringify(systemAlerts));
+  }, [systemAlerts]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.INTERACTIONS, JSON.stringify(interactions));
+  }, [interactions]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(reminders));
+  }, [reminders]);
+
+  // Exam timer loop
   useEffect(() => {
     if (!activeExam) return;
 
@@ -151,7 +389,6 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setActiveExam((prev) => {
         if (!prev) return null;
         if (prev.timeRemainingSeconds <= 1) {
-          // Time expired! Auto submit will trigger
           return { ...prev, timeRemainingSeconds: 0 };
         }
         return {
@@ -164,33 +401,109 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearInterval(interval);
   }, [activeExam]);
 
-  // Auto-submit when timer hits 0
+  // Auto-submit on timer expiry
   useEffect(() => {
     if (activeExam && activeExam.timeRemainingSeconds === 0) {
       submitExam();
     }
   }, [activeExam?.timeRemainingSeconds]);
 
-  // Auth functions
-  const loginAsDemoAdmin = () => {
-    setCurrentUser(DEMO_ADMIN);
+  // Role switching
+  const loginAsRole = (role: Role) => {
+    if (role === 'ROLE_ADMIN') setCurrentUser(DEMO_ADMIN);
+    else if (role === 'ROLE_CREATOR') setCurrentUser(DEMO_CREATOR);
+    else setCurrentUser(DEMO_PARTICIPANT);
   };
 
-  const logout = () => {
-    setCurrentUser(null);
-  };
+  const loginAsDemoAdmin = () => setCurrentUser(DEMO_ADMIN);
+  const loginAsDemoCreator = () => setCurrentUser(DEMO_CREATOR);
+  const loginAsDemoParticipant = () => setCurrentUser(DEMO_PARTICIPANT);
+  const logout = () => setCurrentUser(null);
 
-  const registerUser = (fullName: string, email: string) => {
+  const registerUser = (fullName: string, email: string, role: Role) => {
     const newUser: User = {
       id: Date.now(),
       username: email.split('@')[0],
       email,
       fullName,
-      role: 'ROLE_ADMIN',
+      role,
       createdAt: new Date().toISOString(),
-      collegeOrCompany: 'Platform Administrator / Educator',
+      collegeOrCompany: role === 'ROLE_ADMIN' ? 'Administrator' : role === 'ROLE_CREATOR' ? 'Quiz Creator' : 'Student Participant',
+      isEnabled: true,
     };
+    setUsers((prev) => [...prev, newUser]);
     setCurrentUser(newUser);
+  };
+
+  // User Management
+  const createUser = (userData: Omit<User, 'id' | 'createdAt'>) => {
+    const newUser: User = {
+      ...userData,
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+    };
+    setUsers((prev) => [...prev, newUser]);
+  };
+
+  const updateUser = (id: number, data: Partial<User>) => {
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...data } : u)));
+    if (currentUser?.id === id) {
+      setCurrentUser((prev) => (prev ? { ...prev, ...data } : null));
+    }
+  };
+
+  const deleteUser = (id: number) => {
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+  };
+
+  const toggleUserStatus = (id: number) => {
+    setUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, isEnabled: !u.isEnabled } : u))
+    );
+  };
+
+  // Quiz Approval Management (Admin)
+  const approveQuiz = (quizId: number) => {
+    setQuizzes((prev) =>
+      prev.map((q) =>
+        q.id === quizId
+          ? {
+              ...q,
+              approvalStatus: 'APPROVED',
+              isActive: true,
+              rejectionReason: undefined,
+              updatedAt: new Date().toISOString(),
+            }
+          : q
+      )
+    );
+    // Add positive system alert
+    addSystemAlert(
+      'Quiz Content Approved',
+      `Quiz ID #${quizId} has been approved and published to participants.`,
+      'INFO'
+    );
+  };
+
+  const rejectQuiz = (quizId: number, reason: string) => {
+    setQuizzes((prev) =>
+      prev.map((q) =>
+        q.id === quizId
+          ? {
+              ...q,
+              approvalStatus: 'REJECTED',
+              isActive: false,
+              rejectionReason: reason || 'Content does not meet syllabus guidelines.',
+              updatedAt: new Date().toISOString(),
+            }
+          : q
+      )
+    );
+    addSystemAlert(
+      'Quiz Content Rejected',
+      `Quiz ID #${quizId} was rejected with feedback: "${reason}".`,
+      'WARNING'
+    );
   };
 
   // Exam actions
@@ -271,11 +584,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveExam(null);
   };
 
-  // Secure Server-like score calculation
   const submitExam = (): QuizAttempt => {
-    if (!activeExam) {
-      throw new Error('No active exam to submit');
-    }
+    if (!activeExam) throw new Error('No active exam');
 
     const { quiz, shuffledQuestions, answers, startedAt, totalDurationSeconds, timeRemainingSeconds } = activeExam;
     const timeTakenSeconds = Math.max(1, totalDurationSeconds - timeRemainingSeconds);
@@ -318,7 +628,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     });
 
-    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100 * 100) / 100 : 0;
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100 * 10) / 10 : 0;
     const isPassed = percentage >= quiz.passingPercentage;
 
     const newAttempt: QuizAttempt = {
@@ -327,9 +637,9 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       quizTitle: quiz.title,
       categoryName: quiz.categoryName,
       difficulty: quiz.difficulty,
-      userId: currentUser?.id || 999,
-      userName: currentUser?.fullName || 'Anonymous Student',
-      userEmail: currentUser?.email || 'student@javaquiz.com',
+      userId: currentUser?.id || 3,
+      userName: currentUser?.fullName || 'Participant Rahul',
+      userEmail: currentUser?.email || 'participant@javaquiz.com',
       startedAt,
       submittedAt: new Date().toISOString(),
       timeTakenSeconds,
@@ -352,20 +662,25 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return newAttempt;
   };
 
-  // Admin Actions
+  // Quiz Creator CRUD
   const createQuiz = (data: Partial<Quiz>): Quiz => {
     const category = categories.find((c) => c.id === data.categoryId) || categories[0];
+    const willAutoApprove = systemSettings.autoApproveQuizzes || currentUser?.role === 'ROLE_ADMIN';
+
     const newQuiz: Quiz = {
       id: Date.now(),
-      title: data.title || 'Untitled Java Quiz',
+      title: data.title || 'Untitled Java Assessment',
       slug: (data.title || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       description: data.description || '',
       categoryId: category.id,
       categoryName: category.name,
       difficulty: data.difficulty || 'MEDIUM',
-      durationMinutes: data.durationMinutes || 15,
-      passingPercentage: data.passingPercentage || 70,
-      isActive: data.isActive !== undefined ? data.isActive : true,
+      durationMinutes: data.durationMinutes || systemSettings.defaultDurationMinutes,
+      passingPercentage: data.passingPercentage || systemSettings.defaultPassingPercentage,
+      isActive: willAutoApprove,
+      approvalStatus: willAutoApprove ? 'APPROVED' : 'PENDING',
+      createdByUserId: currentUser?.id || 2,
+      createdByName: currentUser?.fullName || 'Prof. James Gosling',
       questionsCount: data.questions?.length || 0,
       totalMarks: data.questions?.reduce((acc, q) => acc + q.points, 0) || 0,
       createdAt: new Date().toISOString(),
@@ -374,6 +689,15 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     setQuizzes((prev) => [newQuiz, ...prev]);
+
+    if (!willAutoApprove) {
+      addSystemAlert(
+        'New Quiz Pending Approval',
+        `Quiz "${newQuiz.title}" by ${newQuiz.createdByName} is awaiting admin approval.`,
+        'INFO'
+      );
+    }
+
     return newQuiz;
   };
 
@@ -441,7 +765,6 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       prev.map((q) => {
         if (q.id === quizId) {
           const filtered = q.questions.filter((item) => item.id !== questionId);
-          // Renumber
           const renumbered = filtered.map((item, idx) => ({ ...item, questionNumber: idx + 1 }));
           return {
             ...q,
@@ -456,14 +779,189 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  const resetDemoData = () => {
-    localStorage.removeItem(STORAGE_KEYS.QUIZZES);
-    localStorage.removeItem(STORAGE_KEYS.ATTEMPTS);
-    localStorage.removeItem(STORAGE_KEYS.USER);
-    setQuizzes(INITIAL_QUIZZES);
-    setAttemptsHistory([]);
-    setCurrentUser(DEMO_ADMIN);
+  // Creator grading & feedback
+  const gradeAttempt = (
+    attemptId: number,
+    feedbackNotes: string,
+    gradeTag: 'EXCELLENT' | 'GOOD' | 'NEEDS_WORK'
+  ) => {
+    const feedback: CreatorReviewFeedback = {
+      id: Date.now(),
+      attemptId,
+      creatorId: currentUser?.id || 2,
+      creatorName: currentUser?.fullName || 'Prof. James Gosling',
+      feedbackNotes,
+      gradeTag,
+      awardedAt: new Date().toISOString(),
+    };
+
+    setAttemptsHistory((prev) =>
+      prev.map((a) => (a.id === attemptId ? { ...a, creatorFeedback: feedback } : a))
+    );
+
+    if (lastAttemptResult?.id === attemptId) {
+      setLastAttemptResult((prev) => (prev ? { ...prev, creatorFeedback: feedback } : null));
+    }
   };
+
+  // Interactions between Participant and Creator
+  const sendInteraction = (quizId: number, subject: string, message: string) => {
+    const quiz = quizzes.find((q) => q.id === quizId);
+    const newInteraction: ParticipantCreatorInteraction = {
+      id: Date.now(),
+      participantId: currentUser?.id || 3,
+      participantName: currentUser?.fullName || 'Rahul Sharma',
+      participantEmail: currentUser?.email || 'participant@javaquiz.com',
+      creatorId: quiz?.createdByUserId || 2,
+      creatorName: quiz?.createdByName || 'Prof. James Gosling',
+      quizId,
+      quizTitle: quiz?.title || 'General Quiz Inquiry',
+      subject,
+      message,
+      status: 'OPEN',
+      createdAt: new Date().toISOString(),
+    };
+
+    setInteractions((prev) => [newInteraction, ...prev]);
+  };
+
+  const replyToInteraction = (interactionId: number, replyText: string) => {
+    setInteractions((prev) =>
+      prev.map((item) =>
+        item.id === interactionId
+          ? {
+              ...item,
+              reply: replyText,
+              repliedAt: new Date().toISOString(),
+              repliedByName: currentUser?.fullName || 'Prof. James Gosling',
+              status: 'RESOLVED',
+            }
+          : item
+      )
+    );
+  };
+
+  // Reminders
+  const addQuizReminder = (quizId: number, reminderDateTime: string, note?: string) => {
+    const quiz = quizzes.find((q) => q.id === quizId);
+    const newReminder: QuizReminder = {
+      id: Date.now(),
+      participantId: currentUser?.id || 3,
+      quizId,
+      quizTitle: quiz?.title || 'Java Assessment',
+      reminderDateTime,
+      note,
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
+    };
+    setReminders((prev) => [newReminder, ...prev]);
+  };
+
+  const deleteQuizReminder = (reminderId: number) => {
+    setReminders((prev) => prev.filter((r) => r.id !== reminderId));
+  };
+
+  const toggleQuizReminderCompleted = (reminderId: number) => {
+    setReminders((prev) =>
+      prev.map((r) => (r.id === reminderId ? { ...r, isCompleted: !r.isCompleted } : r))
+    );
+  };
+
+  // System Settings & Alerts
+  const updateSystemSettings = (newSettings: Partial<SystemSettings>) => {
+    setSystemSettings((prev) => ({ ...prev, ...newSettings }));
+  };
+
+  const addSystemAlert = (title: string, message: string, type: 'INFO' | 'WARNING' | 'CRITICAL') => {
+    const newAlert: SystemAlert = {
+      id: Date.now(),
+      title,
+      message,
+      type,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+    };
+    setSystemAlerts((prev) => [newAlert, ...prev]);
+  };
+
+  const dismissSystemAlert = (id: number) => {
+    setSystemAlerts((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  // Leaderboard Computation
+  const leaderboard: LeaderboardEntry[] = useMemo(() => {
+    const participantList = users.filter((u) => u.role === 'ROLE_PARTICIPANT');
+
+    const entries: LeaderboardEntry[] = participantList.map((user) => {
+      const userAttempts = attemptsHistory.filter((a) => a.userId === user.id);
+      const attempted = userAttempts.length;
+      const passed = userAttempts.filter((a) => a.isPassed).length;
+      const totalPoints = userAttempts.reduce((sum, a) => sum + a.score, 0);
+      const avgPercentage = attempted > 0 ? Math.round((userAttempts.reduce((s, a) => s + a.percentage, 0) / attempted) * 10) / 10 : 0;
+
+      let badge = 'Novice Explorer';
+      if (avgPercentage >= 90 && attempted >= 3) badge = 'Master Java Architect';
+      else if (avgPercentage >= 75) badge = 'Advanced Developer';
+      else if (attempted >= 1) badge = 'Rising Programmer';
+
+      return {
+        rank: 1,
+        userId: user.id,
+        userName: user.fullName,
+        userEmail: user.email,
+        quizzesAttempted: attempted,
+        quizzesPassed: passed,
+        totalPoints,
+        averagePercentage: avgPercentage,
+        badge,
+      };
+    });
+
+    // Add sample participants if few entries exist to ensure a rich competitive leaderboard
+    if (entries.length < 5) {
+      entries.push(
+        {
+          rank: 1,
+          userId: 101,
+          userName: 'Vikram Mehta',
+          userEmail: 'vikram@university.edu',
+          quizzesAttempted: 5,
+          quizzesPassed: 5,
+          totalPoints: 480,
+          averagePercentage: 96.0,
+          badge: 'Master Java Architect',
+        },
+        {
+          rank: 2,
+          userId: 102,
+          userName: 'Sneha Reddy',
+          userEmail: 'sneha@engineering.ac.in',
+          quizzesAttempted: 4,
+          quizzesPassed: 4,
+          totalPoints: 370,
+          averagePercentage: 92.5,
+          badge: 'Master Java Architect',
+        },
+        {
+          rank: 3,
+          userId: 103,
+          userName: 'Arjun Das',
+          userEmail: 'arjun@techschool.org',
+          quizzesAttempted: 4,
+          quizzesPassed: 3,
+          totalPoints: 340,
+          averagePercentage: 85.0,
+          badge: 'Advanced Developer',
+        }
+      );
+    }
+
+    // Sort by total points and average score
+    entries.sort((a, b) => b.totalPoints - a.totalPoints || b.averagePercentage - a.averagePercentage);
+
+    // Assign ranking numbers
+    return entries.map((item, idx) => ({ ...item, rank: idx + 1 }));
+  }, [users, attemptsHistory]);
 
   // Student stats computation
   const studentStats: StudentStats = useMemo(() => {
@@ -511,19 +1009,48 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [attemptsHistory, currentUser]);
 
+  const resetDemoData = () => {
+    localStorage.removeItem(STORAGE_KEYS.QUIZZES);
+    localStorage.removeItem(STORAGE_KEYS.ATTEMPTS);
+    localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem(STORAGE_KEYS.USERS);
+    localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+    localStorage.removeItem(STORAGE_KEYS.ALERTS);
+    localStorage.removeItem(STORAGE_KEYS.INTERACTIONS);
+    localStorage.removeItem(STORAGE_KEYS.REMINDERS);
+    setQuizzes(INITIAL_QUIZZES);
+    setUsers(INITIAL_USERS);
+    setAttemptsHistory([]);
+    setSystemSettings(INITIAL_SYSTEM_SETTINGS);
+    setSystemAlerts(INITIAL_SYSTEM_ALERTS);
+    setInteractions(INITIAL_INTERACTIONS);
+    setReminders(INITIAL_REMINDERS);
+    setCurrentUser(DEMO_ADMIN);
+  };
+
   return (
     <QuizContext.Provider
       value={{
         currentUser,
         setCurrentUser,
+        users,
+        loginAsRole,
         loginAsDemoAdmin,
+        loginAsDemoCreator,
+        loginAsDemoParticipant,
         logout,
         registerUser,
+        createUser,
+        updateUser,
+        deleteUser,
+        toggleUserStatus,
         categories,
         quizzes,
         activeExam,
         lastAttemptResult,
         attemptsHistory,
+        approveQuiz,
+        rejectQuiz,
         startQuiz,
         selectAnswer,
         toggleFlagQuestion,
@@ -539,8 +1066,22 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleQuizStatus,
         addQuestionToQuiz,
         deleteQuestion,
-        resetDemoData,
+        gradeAttempt,
+        interactions,
+        sendInteraction,
+        replyToInteraction,
+        reminders,
+        addQuizReminder,
+        deleteQuizReminder,
+        toggleQuizReminderCompleted,
+        systemSettings,
+        updateSystemSettings,
+        systemAlerts,
+        addSystemAlert,
+        dismissSystemAlert,
+        leaderboard,
         studentStats,
+        resetDemoData,
       }}
     >
       {children}

@@ -1,4 +1,4 @@
-export type Role = 'ROLE_STUDENT' | 'ROLE_ADMIN';
+export type Role = 'ROLE_ADMIN' | 'ROLE_CREATOR' | 'ROLE_PARTICIPANT';
 
 export interface User {
   id: number;
@@ -9,9 +9,11 @@ export interface User {
   createdAt: string;
   avatarUrl?: string;
   collegeOrCompany?: string;
+  isEnabled: boolean;
 }
 
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
+export type ApprovalStatus = 'APPROVED' | 'PENDING' | 'REJECTED';
 
 export interface Category {
   id: number;
@@ -52,6 +54,10 @@ export interface Quiz {
   durationMinutes: number;
   passingPercentage: number;
   isActive: boolean;
+  approvalStatus: ApprovalStatus;
+  rejectionReason?: string;
+  createdByUserId: number;
+  createdByName: string;
   questionsCount: number;
   totalMarks: number;
   createdAt: string;
@@ -80,6 +86,16 @@ export interface QuestionResultReview {
   maxPoints: number;
 }
 
+export interface CreatorReviewFeedback {
+  id: number;
+  attemptId: number;
+  creatorId: number;
+  creatorName: string;
+  feedbackNotes: string;
+  gradeTag: 'EXCELLENT' | 'GOOD' | 'NEEDS_WORK';
+  awardedAt: string;
+}
+
 export interface QuizAttempt {
   id: number;
   quizId: number;
@@ -102,6 +118,68 @@ export interface QuizAttempt {
   isPassed: boolean;
   passingPercentage: number;
   reviews: QuestionResultReview[];
+  creatorFeedback?: CreatorReviewFeedback;
+}
+
+export interface ParticipantCreatorInteraction {
+  id: number;
+  participantId: number;
+  participantName: string;
+  participantEmail: string;
+  creatorId?: number;
+  creatorName?: string;
+  quizId: number;
+  quizTitle: string;
+  subject: string;
+  message: string;
+  reply?: string;
+  repliedAt?: string;
+  repliedByName?: string;
+  status: 'OPEN' | 'RESOLVED';
+  createdAt: string;
+}
+
+export interface QuizReminder {
+  id: number;
+  participantId: number;
+  quizId: number;
+  quizTitle: string;
+  reminderDateTime: string;
+  note?: string;
+  isCompleted: boolean;
+  createdAt: string;
+}
+
+export interface SystemSettings {
+  platformTitle: string;
+  defaultDurationMinutes: number;
+  defaultPassingPercentage: number;
+  autoApproveQuizzes: boolean;
+  allowParticipantInteractions: boolean;
+  registrationOpen: boolean;
+  maintenanceMode: boolean;
+  systemAnnouncement: string;
+}
+
+export interface SystemAlert {
+  id: number;
+  title: string;
+  message: string;
+  type: 'INFO' | 'WARNING' | 'CRITICAL';
+  timestamp: string;
+  isRead?: boolean;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  quizzesAttempted: number;
+  quizzesPassed: number;
+  totalPoints: number;
+  averagePercentage: number;
+  badge: string;
 }
 
 export interface StudentStats {

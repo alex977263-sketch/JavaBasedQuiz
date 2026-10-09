@@ -326,21 +326,22 @@ CREATE TABLE IF NOT EXISTS \`submitted_answers\` (
     description: 'Seed script initializing roles, demo administrator, demo student, and default quiz categories.',
     content: `-- Insert Base Roles
 INSERT IGNORE INTO \`roles\` (\`id\`, \`name\`, \`description\`) VALUES
-(1, 'ROLE_STUDENT', 'Enrolled student authorized to practice quizzes and view personal performance'),
-(2, 'ROLE_ADMIN', 'Platform Administrator with full control over quizzes, questions, and reports');
+(1, 'ROLE_ADMIN', 'Platform Administrator with full control over user accounts, quiz approval, and settings'),
+(2, 'ROLE_CREATOR', 'Quiz Creator authorized to author quizzes, review results, and interact with participants'),
+(3, 'ROLE_PARTICIPANT', 'Participant authorized to take timed quizzes, review performance reports, and contact creators');
 
 -- Insert Demo Users
 -- Passwords hashed via Spring Security BCryptPasswordEncoder (strength 10)
--- 'Admin@2026!' -> $2a$10$wK1F5Nfxr12bXJz2qA7nhe7O5P4V89pLg0L7eI...
--- 'Student@2026!' -> $2a$10$mN3B2A1qZ...
 INSERT IGNORE INTO \`users\` (\`id\`, \`username\`, \`email\`, \`password_hash\`, \`full_name\`, \`is_enabled\`) VALUES
-(1, 'admin', 'admin@javaquiz.com', '$2a$10$GRLdNnU8F48lVfVp9s1qCeX76o/o73vjG9n8Gq.q.pY7H6fM.62i2', 'Platform Administrator', 1),
-(2, 'student', 'student@javaquiz.com', '$2a$10$GRLdNnU8F48lVfVp9s1qCeX76o/o73vjG9n8Gq.q.pY7H6fM.62i2', 'John Alex Doe', 1);
+(1, 'admin', 'admin@javaquiz.com', '$2a$10$GRLdNnU8F48lVfVp9s1qCeX76o/o73vjG9n8Gq.q.pY7H6fM.62i2', 'Administrator', 1),
+(2, 'creator', 'creator@javaquiz.com', '$2a$10$GRLdNnU8F48lVfVp9s1qCeX76o/o73vjG9n8Gq.q.pY7H6fM.62i2', 'Prof. James Gosling', 1),
+(3, 'participant', 'participant@javaquiz.com', '$2a$10$GRLdNnU8F48lVfVp9s1qCeX76o/o73vjG9n8Gq.q.pY7H6fM.62i2', 'Rahul Sharma', 1);
 
 -- Map User Roles
 INSERT IGNORE INTO \`user_roles\` (\`user_id\`, \`role_id\`) VALUES
-(1, 2), -- Admin has ROLE_ADMIN
-(2, 1); -- Student has ROLE_STUDENT
+(1, 1), -- Admin has ROLE_ADMIN
+(2, 2), -- Creator has ROLE_CREATOR
+(3, 3); -- Participant has ROLE_PARTICIPANT
 
 -- Seed Categories
 INSERT IGNORE INTO \`categories\` (\`id\`, \`name\`, \`slug\`, \`description\`, \`icon_name\`) VALUES
