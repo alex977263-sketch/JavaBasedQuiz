@@ -27,6 +27,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'maven'
+          cache-dependency-path: 'backend-spring-boot/pom.xml'
 
       - name: Build and Test with Maven
         working-directory: ./backend-spring-boot
