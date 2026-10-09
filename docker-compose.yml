@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # MySQL 8.0 Database
+  mysql-db:
+    image: mysql:8.0
+    container_name: quiz_mysql_container
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secure_password_2026
+      MYSQL_DATABASE: quiz_platform_db
+      MYSQL_USER: quiz_user
+      MYSQL_PASSWORD: quiz_secure_password_2026
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend-spring-boot/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend-spring-boot/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Spring Boot Java REST Backend
+  backend:
+    build:
+      context: ./backend-spring-boot
+      dockerfile: Dockerfile
+    container_name: quiz_backend_container
+    restart: unless-stopped
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/quiz_platform_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: quiz_user
+      SPRING_DATASOURCE_PASSWORD: quiz_secure_password_2026
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    ports:
+      - "8080:8080"
+
+  # Frontend Web App (Nginx production image)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quiz_frontend_container
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

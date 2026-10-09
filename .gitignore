@@ -1,3 +1,4 @@
+# Node / Vite
 node_modules/
 build/
 dist/
@@ -6,3 +7,15 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Maven / Java
+target/
+backend-spring-boot/target/
+*.class
+*.jar
+*.war
+
+# IDEs
+.idea/
+.vscode/
+*.iml
