@@ -9,12 +9,16 @@ Production-grade **Java 17** online quiz platform engineered with **Spring Boot 
 | Package | Responsibility |
 | :--- | :--- |
 | `com.javaquiz.entity` | 14 JPA entities & enums (`User`, `Role`, `Category`, `Quiz`, `Question`, `QuestionOption`, `QuizAttempt`, `SubmittedAnswer`, `ParticipantCreatorInteraction`, `QuizReminder`, `SystemSettings`, `SystemAlert`, `AuditLog`) |
+| `com.javaquiz.oop` | `ScoringPolicy` interface, `AbstractScoringPolicy`, `StandardScoringPolicy`, `NegativeMarkingScoringPolicy` (polymorphism & inheritance), `GenericScoreCache<K, V>` |
+| `com.javaquiz.concurrent` | `QuizSessionMonitor` (`ScheduledExecutorService`, `ConcurrentHashMap`, `AtomicInteger`, `synchronized` locks) |
+| `com.javaquiz.jdbc` | `JdbcConnectionManager` & `JdbcQuizDao` (`Connection`, `PreparedStatement`, `ResultSet`, `DriverManager` DAO operations) |
+| `com.javaquiz.servlet` | `QuizPlatformServlet` (`HttpServlet` `doGet`/`doPost`) registered via `ServletConfig` at `/servlet/quizzes` |
 | `com.javaquiz.repository` | 12 Spring Data JPA repositories with JPQL search & role queries |
 | `com.javaquiz.service` | Business logic: `AuthService`, `AdminService`, `QuizCreatorService`, `QuizAttemptService`, `ParticipantPortalService`, `QuizCatalogService`, `QuizAnalyticsService`, `ReportExportService`, `AuditLogService`, `QuestionBankService` |
-| `com.javaquiz.controller` | 6 REST controllers (`AuthController`, `QuizCatalogController`, `QuizAttemptController`, `ParticipantController`, `CreatorController`, `AdminController`) |
+| `com.javaquiz.controller` | 7 REST controllers (`AuthController`, `QuizCatalogController`, `QuizAttemptController`, `ParticipantController`, `CreatorController`, `AdminController`, `SystemHealthController`) |
 | `com.javaquiz.security` | Spring Security 6 `SecurityFilterChain`, `JwtTokenProvider`, `JwtAuthenticationFilter`, `CustomUserDetailsService`, `UserPrincipal` |
 | `com.javaquiz.exception` | `@RestControllerAdvice` global exception handler & custom domain exceptions |
-| `com.javaquiz.config` | `DataInitializer` seeding 3 roles, users, 7 CS categories, 7 quizzes, settings & alerts |
+| `com.javaquiz.config` | `DataInitializer`, `ExtendedQuizSeeder`, `ServletConfig` |
 | `com.javaquiz.cli` | `ConsoleQuizRunner` — Core Java timed CLI runner using `ScheduledExecutorService` |
 | `com.javaquiz.desktop` | `JavaQuizDesktopApp` — Java Swing GUI client powered by `java.net.http.HttpClient` |
 

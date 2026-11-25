@@ -1,5 +1,6 @@
 package com.javaquiz.service;
 
+import com.javaquiz.concurrent.QuizSessionMonitor;
 import com.javaquiz.dto.*;
 import com.javaquiz.entity.*;
 import com.javaquiz.exception.BadRequestException;
@@ -28,6 +29,7 @@ public class QuizAttemptService {
     private final UserRepository userRepository;
     private final QuizAttemptRepository attemptRepository;
     private final DtoMapper mapper;
+    private final QuizSessionMonitor sessionMonitor;
 
     /**
      * Starts a timed quiz attempt for a participant.
@@ -76,6 +78,7 @@ public class QuizAttemptService {
                 .build();
 
         QuizAttempt saved = attemptRepository.save(attempt);
+        sessionMonitor.registerSession(saved.getAttemptToken(), userId, quizId, quiz.getDurationMinutes());
         return buildStartResponse(quiz, saved, shuffle);
     }
 
@@ -164,6 +167,7 @@ public class QuizAttemptService {
         attempt.setIsPassed(isPassed);
 
         QuizAttempt saved = attemptRepository.save(attempt);
+        sessionMonitor.completeSession(saved.getAttemptToken());
         return mapper.toAttemptResultDto(saved, true);
     }
 

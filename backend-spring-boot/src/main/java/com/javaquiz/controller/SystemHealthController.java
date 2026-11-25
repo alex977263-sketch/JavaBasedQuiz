@@ -1,5 +1,6 @@
 package com.javaquiz.controller;
 
+import com.javaquiz.concurrent.QuizSessionMonitor;
 import com.javaquiz.dto.ApiResponse;
 import com.javaquiz.repository.CategoryRepository;
 import com.javaquiz.repository.QuizAttemptRepository;
@@ -27,6 +28,7 @@ public class SystemHealthController {
     private final CategoryRepository categoryRepository;
     private final QuizRepository quizRepository;
     private final QuizAttemptRepository attemptRepository;
+    private final QuizSessionMonitor sessionMonitor;
 
     @GetMapping("/health")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getHealth() {
@@ -39,6 +41,8 @@ public class SystemHealthController {
         status.put("categoriesCount", categoryRepository.count());
         status.put("quizzesCount", quizRepository.count());
         status.put("attemptsCount", attemptRepository.count());
+        status.put("activeTimedSessions", sessionMonitor.getActiveSessionCount());
+        status.put("completedTimedSessions", sessionMonitor.getCompletedSessionsCount());
         return ResponseEntity.ok(ApiResponse.ok("Java Spring Boot backend healthy", status));
     }
 }
