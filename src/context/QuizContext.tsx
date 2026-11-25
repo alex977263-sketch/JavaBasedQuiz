@@ -17,7 +17,10 @@ import {
   LeaderboardEntry,
   CreatorReviewFeedback,
 } from '../types/quiz';
-import { INITIAL_CATEGORIES, INITIAL_QUIZZES } from '../data/sampleQuizzes';
+import sampleQuizzesData from '../data/sampleQuizzes.json';
+
+const INITIAL_CATEGORIES = sampleQuizzesData.categories as Category[];
+const INITIAL_QUIZZES = sampleQuizzesData.quizzes as Quiz[];
 
 export const DEMO_ADMIN: User = {
   id: 1,

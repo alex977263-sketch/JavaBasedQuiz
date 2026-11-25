@@ -1,26 +1,27 @@
-# Java-Based Online Quiz Platform (Spring Boot, JPA & MySQL)
+# Java-Based Online Quiz Platform (Spring Boot, JPA, Security & MySQL)
 
-Production-grade online quiz platform engineered with Java 17, Spring Boot 3.2, Spring Security 6, Spring Data JPA, and MySQL.
-
----
-
-## 🏗 Architecture & Design Patterns
-- **Presentation Layer:** RESTful APIs with Spring Web MVC
-- **Service Layer:** Business rules, server-side scoring verification, transactions (`@Transactional`)
-- **Data Access Layer:** Spring Data JPA Repositories with Hibernate 6 ORM
-- **Security:** Spring Security 6 with `BCryptPasswordEncoder` and stateless JSON Web Tokens (JJWT)
-- **Database:** MySQL 8.0 InnoDB engine with normalized tables, foreign keys, and indexes
+Production-grade **Java 17** online quiz platform engineered with **Spring Boot 3.2**, **Spring Security 6 (JWT + BCrypt)**, **Spring Data JPA / Hibernate**, **MySQL 8.0**, **JUnit 5 + MockMvc**, plus a **Core Java CLI Runner** and **Java Swing Desktop Client**.
 
 ---
 
-## 🗄 1. MySQL Database Setup
+## Architecture & Java Packages (`com.javaquiz`)
 
-1. Open your MySQL client or terminal:
-```bash
-mysql -u root -p
-```
+| Package | Responsibility |
+| :--- | :--- |
+| `com.javaquiz.entity` | 14 JPA entities & enums (`User`, `Role`, `Category`, `Quiz`, `Question`, `QuestionOption`, `QuizAttempt`, `SubmittedAnswer`, `ParticipantCreatorInteraction`, `QuizReminder`, `SystemSettings`, `SystemAlert`, `AuditLog`) |
+| `com.javaquiz.repository` | 12 Spring Data JPA repositories with JPQL search & role queries |
+| `com.javaquiz.service` | Business logic: `AuthService`, `AdminService`, `QuizCreatorService`, `QuizAttemptService`, `ParticipantPortalService`, `QuizCatalogService`, `QuizAnalyticsService`, `ReportExportService`, `AuditLogService`, `QuestionBankService` |
+| `com.javaquiz.controller` | 6 REST controllers (`AuthController`, `QuizCatalogController`, `QuizAttemptController`, `ParticipantController`, `CreatorController`, `AdminController`) |
+| `com.javaquiz.security` | Spring Security 6 `SecurityFilterChain`, `JwtTokenProvider`, `JwtAuthenticationFilter`, `CustomUserDetailsService`, `UserPrincipal` |
+| `com.javaquiz.exception` | `@RestControllerAdvice` global exception handler & custom domain exceptions |
+| `com.javaquiz.config` | `DataInitializer` seeding 3 roles, users, 7 CS categories, 7 quizzes, settings & alerts |
+| `com.javaquiz.cli` | `ConsoleQuizRunner` — Core Java timed CLI runner using `ScheduledExecutorService` |
+| `com.javaquiz.desktop` | `JavaQuizDesktopApp` — Java Swing GUI client powered by `java.net.http.HttpClient` |
 
-2. Execute database & user provisioning:
+---
+
+## 1. MySQL Database Setup
+
 ```sql
 CREATE DATABASE IF NOT EXISTS `quiz_platform_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -31,55 +32,24 @@ FLUSH PRIVILEGES;
 
 ---
 
-## ⚙️ 2. Configuration (`src/main/resources/application.yml`)
+## 2. Build, Test & Run Commands (Maven)
 
-Set the environment variables or update `application.yml`:
 ```bash
-export SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3306/quiz_platform_db?useSSL=false&serverTimezone=UTC"
-export SPRING_DATASOURCE_USERNAME="quiz_user"
-export SPRING_DATASOURCE_PASSWORD="quiz_secure_password_2026"
-export JWT_SECRET="404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"
-```
+cd backend-spring-boot
 
----
+# Run full JUnit 5 & MockMvc test suite (uses H2 in-memory MySQL mode)
+mvn clean verify
 
-## 🚀 3. Commands to Build & Run Application
-
-Using Maven:
-```bash
-# Clean and compile
-mvn clean compile
-
-# Execute test suite
-mvn test
-
-# Package to JAR
-mvn clean package -DskipTests
-
-# Run Spring Boot application
+# Run Spring Boot REST API on port 8080 (/api/v1)
 mvn spring-boot:run
 ```
 
-The application will start on port `8080` with context path `/api/v1`.
-
 ---
 
-## 🔑 4. Demo Login Credentials
+## 3. Demo Credentials (3 Official User Roles)
 
-| Role | Username / Email | Password | Access Rights |
+| Role | Email | Password | Capabilities |
 | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin@javaquiz.com` | `Admin@2026!` | Manage quizzes, author questions, view reports |
-| **Student** | `student@javaquiz.com` | `Student@2026!` | Take exams, view private results & review |
-
----
-
-## 🛡 5. Security & Authorization Matrix
-
-| Endpoint | Method | Allowed Roles | Description |
-| :--- | :--- | :--- | :--- |
-| `/api/v1/auth/**` | POST | Public | Register, Login |
-| `/api/v1/quizzes` | GET | Public / Student | Browse available tests |
-| `/api/v1/quizzes/{id}/attempt` | GET | `ROLE_STUDENT` | Sanitized questions (no answers exposed) |
-| `/api/v1/quizzes/{id}/submit` | POST | `ROLE_STUDENT` | Submit answers & server calculates score |
-| `/api/v1/student/history` | GET | `ROLE_STUDENT` | Student's own attempt history |
-| `/api/v1/admin/**` | ALL | `ROLE_ADMIN` | CRUD quizzes, questions, student stats |
+| **Admin** (`ROLE_ADMIN`) | `admin@javaquiz.com` | `Admin@2026!` | User management, quiz approval/rejection, system settings, alerts, analytics, audit logs |
+| **Quiz Creator** (`ROLE_CREATOR`) | `creator@javaquiz.com` | `Creator@2026!` | Create/edit quizzes, author questions, grade attempts, reply to participant doubts |
+| **Participant** (`ROLE_PARTICIPANT`) | `participant@javaquiz.com` | `Participant@2026!` | Take timed quizzes, view score reports & explanations, set reminders, contact creators |
