@@ -18,11 +18,11 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     @Query("""
             SELECT q FROM Quiz q
             WHERE q.isActive = true
-              AND q.approvalStatus = 'APPROVED'
+              AND q.approvalStatus = com.javaquiz.entity.ApprovalStatus.APPROVED
               AND (:categoryId IS NULL OR q.category.id = :categoryId)
               AND (:difficulty IS NULL OR q.difficulty = :difficulty)
-              AND (:keyword IS NULL OR LOWER(q.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                   OR LOWER(q.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:keyword IS NULL OR LOWER(q.title) LIKE LOWER(CONCAT('%', COALESCE(:keyword, ''), '%'))
+                   OR LOWER(q.description) LIKE LOWER(CONCAT('%', COALESCE(:keyword, ''), '%')))
             ORDER BY q.createdAt DESC
             """)
     List<Quiz> searchApprovedActiveQuizzes(

@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Service
@@ -93,7 +94,7 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .collegeOrCompany(request.getCollegeOrCompany())
                 .isEnabled(true)
-                .roles(Set.of(role))
+                .roles(new HashSet<>(Set.of(role)))
                 .build();
 
         User saved = userRepository.save(newUser);

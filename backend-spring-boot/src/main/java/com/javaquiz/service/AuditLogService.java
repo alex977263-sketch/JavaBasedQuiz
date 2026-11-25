@@ -32,7 +32,7 @@ public class AuditLogService {
 
     @Transactional(readOnly = true)
     public List<AuditLog> getRecentAuditLogs() {
-        return auditLogRepository.findTop50ByOrderByCreatedAtDesc();
+        return auditLogRepository.findTop50ByOrderByCreatedAtDescIdDesc();
     }
 
     @Transactional(readOnly = true)

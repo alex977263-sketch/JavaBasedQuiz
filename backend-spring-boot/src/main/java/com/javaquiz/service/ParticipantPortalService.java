@@ -107,8 +107,9 @@ public class ParticipantPortalService {
                     .build());
         }
 
-        entries.sort(Comparator.comparingInt(LeaderboardEntryDto::getTotalPoints).reversed()
-                .thenComparingDouble(LeaderboardEntryDto::getAveragePercentage).reversed());
+        entries.sort(Comparator.comparingInt(LeaderboardEntryDto::getTotalPoints)
+                .thenComparingDouble(LeaderboardEntryDto::getAveragePercentage)
+                .reversed());
 
         for (int i = 0; i < entries.size(); i++) {
             entries.get(i).setRank(i + 1);

@@ -4,6 +4,7 @@ import com.javaquiz.dto.*;
 import com.javaquiz.entity.AuditLog;
 import com.javaquiz.service.AdminService;
 import com.javaquiz.service.AuditLogService;
+import com.javaquiz.service.QuizIntegrityAuditService;
 import com.javaquiz.service.ReportExportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class AdminController {
     private final AdminService adminService;
     private final AuditLogService auditLogService;
     private final ReportExportService reportExportService;
+    private final QuizIntegrityAuditService integrityAuditService;
 
     // -------------------------------------------------------------------------
     // User Management
@@ -163,5 +165,13 @@ public class AdminController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=platform-quiz-report.csv")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(csvBytes);
+    }
+
+    @GetMapping("/quizzes/integrity-audit")
+    public ResponseEntity<ApiResponse<List<QuizIntegrityAuditService.QuizIntegrityReport>>> auditQuizzes() {
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Quiz integrity audit completed",
+                integrityAuditService.auditAllQuizzes()
+        ));
     }
 }

@@ -31,7 +31,7 @@ jobs:
 
       - name: Build and Test with Maven
         working-directory: ./backend-spring-boot
-        run: mvn clean verify
+        run: mvn -B clean verify
 
       - name: Archive build artifacts
         if: success()

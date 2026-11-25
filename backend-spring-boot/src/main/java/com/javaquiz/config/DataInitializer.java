@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -65,7 +66,7 @@ public class DataInitializer implements CommandLineRunner {
                 .fullName("Administrator")
                 .collegeOrCompany("Faculty of Software Systems")
                 .isEnabled(true)
-                .roles(Set.of(adminRole))
+                .roles(new HashSet<>(Set.of(adminRole)))
                 .build());
 
         User creator = userRepository.save(User.builder()
@@ -75,7 +76,7 @@ public class DataInitializer implements CommandLineRunner {
                 .fullName("Prof. James Gosling")
                 .collegeOrCompany("Java Curriculum Lead")
                 .isEnabled(true)
-                .roles(Set.of(creatorRole))
+                .roles(new HashSet<>(Set.of(creatorRole)))
                 .build());
 
         User anita = userRepository.save(User.builder()
@@ -85,7 +86,7 @@ public class DataInitializer implements CommandLineRunner {
                 .fullName("Dr. Anita Borg")
                 .collegeOrCompany("Systems & OS Department")
                 .isEnabled(true)
-                .roles(Set.of(creatorRole))
+                .roles(new HashSet<>(Set.of(creatorRole)))
                 .build());
 
         User participant = userRepository.save(User.builder()
@@ -95,7 +96,7 @@ public class DataInitializer implements CommandLineRunner {
                 .fullName("Rahul Sharma")
                 .collegeOrCompany("Computer Science & Engineering")
                 .isEnabled(true)
-                .roles(Set.of(participantRole))
+                .roles(new HashSet<>(Set.of(participantRole)))
                 .build());
 
         userRepository.save(User.builder()
@@ -105,7 +106,7 @@ public class DataInitializer implements CommandLineRunner {
                 .fullName("Priya Patel")
                 .collegeOrCompany("Software Technology Institute")
                 .isEnabled(true)
-                .roles(Set.of(participantRole))
+                .roles(new HashSet<>(Set.of(participantRole)))
                 .build());
 
         settingsRepository.save(SystemSettings.builder()
