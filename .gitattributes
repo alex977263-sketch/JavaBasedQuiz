@@ -1,0 +1,5 @@
+*.java linguist-detectable=true
+*.sql linguist-detectable=true
+src/components/** linguist-vendored
+src/context/** linguist-vendored
+src/data/** linguist-vendored
