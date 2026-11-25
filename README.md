@@ -1,6 +1,16 @@
 # Java-Based Online Quiz Platform
 
-A full-stack **Java 17** educational quiz platform built with **Spring Boot 3.2**, **Spring Security 6 (JWT + BCrypt)**, **JDBC (`Connection`, `PreparedStatement`, `ResultSet`)**, **Spring Data JPA / Hibernate**, **Jakarta `HttpServlet`**, **Java Swing Desktop Client**, **Core Java CLI Runner**, and **MySQL 8.0** (with a responsive React + TypeScript web interface).
+A full-stack **Java 17** educational quiz platform built with **Spring Boot 3.2**, **Spring Security 6 (JWT + BCrypt)**, **JDBC (`Connection`, `PreparedStatement`, `ResultSet`, `DriverManager`)**, **Spring Data JPA / Hibernate**, **Jakarta `HttpServlet`**, **Java Swing Desktop Client**, **Core Java CLI Runner**, and **MySQL 8.0**, paired with a responsive web interface.
+
+---
+
+## Key Features & Official User Roles
+
+| Role | Demo Credentials | Core Capabilities |
+| :--- | :--- | :--- |
+| **Administrator** (`ROLE_ADMIN`) | `admin@javaquiz.com` / `Admin@2026!` | User account management & role control, approve/reject quizzes, manage system settings & alerts, view platform analytics, audit logs & CSV reports |
+| **Quiz Creator** (`ROLE_CREATOR`) | `creator@javaquiz.com` / `Creator@2026!` | Author quizzes & 4-option Java coding questions, review & grade participant attempts, reply to participant doubts, view quiz analytics |
+| **Participant** (`ROLE_PARTICIPANT`) | `participant@javaquiz.com` / `Participant@2026!` | Search/filter quizzes by category & difficulty, take timed quizzes with countdown auto-submit, review answers & explanations, track history, leaderboard & reminders |
 
 ---
 
@@ -16,38 +26,88 @@ A full-stack **Java 17** educational quiz platform built with **Spring Boot 3.2*
 | **Database Connectivity (JDBC) & DAO Classes** | `JdbcConnectionManager` (`DataSource` & `DriverManager`), `JdbcQuizDao` (`Connection`, `PreparedStatement`, `ResultSet`, `SQLException` try-with-resources), `schema.sql` & `data.sql` |
 | **Servlet & Web Integration** | `QuizPlatformServlet` (`jakarta.servlet.http.HttpServlet` with `doGet` & `doPost`), registered via `ServletConfig` at `/api/v1/servlet/quizzes`, plus 7 `@RestController` endpoints |
 | **Java GUI & CLI** | `JavaQuizDesktopApp` (Java Swing GUI using `java.net.http.HttpClient`), `ConsoleQuizRunner` (timed Core Java CLI runner) |
-| **Code Quality & Automated Testing** | 23 JUnit 5 & MockMvc integration/unit test classes under `backend-spring-boot/src/test/java/com/javaquiz/` (`mvn -B clean verify`) |
+| **Code Quality & Automated Testing** | 21 JUnit 5 & MockMvc integration/unit test classes under `backend-spring-boot/src/test/java/com/javaquiz/` (`mvn -B clean verify`) |
 
 ---
 
-## Official User Roles
+## Project Structure
 
-1. **Administrator (`ROLE_ADMIN`)** — `admin@javaquiz.com` / `Admin@2026!`
-   - User account CRUD & role assignment, quiz approval/rejection, system settings, system alerts, platform analytics, CSV export, and audit logs.
-2. **Quiz Creator (`ROLE_CREATOR`)** — `creator@javaquiz.com` / `Creator@2026!`
-   - Create and manage quizzes & 4-option Java questions, review and grade participant attempts, and reply to participant doubts.
-3. **Participant (`ROLE_PARTICIPANT`)** — `participant@javaquiz.com` / `Participant@2026!`
-   - Take timed quizzes with countdown auto-submit, review detailed explanations, track performance history & leaderboard standing, manage reminders, and message creators.
+```text
+.
+├── .github/workflows/
+│   ├── backend-ci.yml                  # Maven build & JUnit 5 / MockMvc CI workflow
+│   └── deploy-pages.yml                # GitHub Pages frontend deployment workflow
+├── backend-spring-boot/
+│   ├── pom.xml                         # Spring Boot 3.2.3, Java 17, Security, JPA, MySQL, H2, JJWT
+│   ├── Dockerfile
+│   └── src/
+│       ├── main/
+│       │   ├── java/com/javaquiz/
+│       │   │   ├── cli/                # ConsoleQuizRunner (Core Java CLI quiz session)
+│       │   │   ├── config/             # DataInitializer, ExtendedQuizSeeder, ServletConfig
+│       │   │   ├── concurrent/         # QuizSessionMonitor (multithreading & synchronization)
+│       │   │   ├── controller/         # 7 Spring REST Controllers (/api/v1/*)
+│       │   │   ├── desktop/            # JavaQuizDesktopApp (Java Swing GUI client)
+│       │   │   ├── dto/                # Request/Response DTOs with Jakarta Bean Validation
+│       │   │   ├── entity/             # 14 JPA Entities & Enums
+│       │   │   ├── exception/          # GlobalExceptionHandler & custom exceptions
+│       │   │   ├── jdbc/               # JdbcConnectionManager & JdbcQuizDao (raw JDBC)
+│       │   │   ├── oop/                # ScoringPolicy hierarchy & GenericScoreCache<K, V>
+│       │   │   ├── repository/         # 12 Spring Data JPA Repositories
+│       │   │   ├── security/           # JWT & Spring Security 6 configuration
+│       │   │   ├── service/            # Core business logic & CSV/analytics services
+│       │   │   ├── servlet/            # QuizPlatformServlet (Jakarta HttpServlet)
+│       │   │   └── util/               # QuizValidationUtils
+│       │   └── resources/
+│       │       ├── application.yml     # MySQL & JWT configuration
+│       │       ├── schema.sql          # MySQL 8.0 relational schema (14 tables)
+│       │       └── data.sql            # Seed roles, users, categories & settings
+│       └── test/
+│           ├── java/com/javaquiz/      # JUnit 5 unit, JDBC, Servlet, Concurrency & MockMvc tests
+│           └── resources/application.yml
+├── src/                                # Responsive Web Frontend (React + TypeScript + Tailwind)
+├── docker-compose.yml                  # Full-stack MySQL + Spring Boot + Frontend orchestration
+├── DEPLOYMENT.md                       # Deployment guide
+└── README.md
+```
 
 ---
 
-## Running Locally & Testing
+## Setup & Running Locally
 
-### Java Spring Boot Backend + Tests
+### 1. MySQL Database Setup (Optional for local production run; tests use H2 in MySQL mode)
+```sql
+CREATE DATABASE IF NOT EXISTS `quiz_platform_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'quiz_user'@'localhost' IDENTIFIED BY 'quiz_secure_password_2026';
+GRANT ALL PRIVILEGES ON `quiz_platform_db`.* TO 'quiz_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### 2. Run Java Backend Tests & Server
 ```bash
 cd backend-spring-boot
 
-# Run all JUnit 5, JDBC, Servlet, Concurrency, and MockMvc tests (H2 MySQL-mode)
+# Run full JUnit 5, JDBC, HttpServlet, Concurrency, and MockMvc suite
 mvn -B clean verify
 
-# Start Spring Boot REST + Servlet server on http://localhost:8080/api/v1
+# Start Spring Boot REST + HttpServlet backend on http://localhost:8080/api/v1
 mvn spring-boot:run
 ```
 
-### Web Frontend
+### 3. Run Java Swing Desktop GUI Client
+With the backend running on port `8080`:
+```bash
+cd backend-spring-boot
+mvn exec:java -Dexec.mainClass="com.javaquiz.desktop.JavaQuizDesktopApp"
+```
+
+### 4. Run Web Frontend
 ```bash
 npm install
 npm run dev
 ```
 
-See `backend-spring-boot/README.md` and `DEPLOYMENT.md` for MySQL setup, Docker Compose, and GitHub Actions CI/CD details.
+### 5. Run Full Stack with Docker Compose
+```bash
+docker compose up --build
+```
